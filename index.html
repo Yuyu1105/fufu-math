@@ -1,0 +1,601 @@
+﻿<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<title>FuFu 數學冒險 🐾</title>
+<style>
+:root{--purple:#7c3aed;--purple-light:#a78bfa;--purple-pale:#ede9fe;--purple-dark:#5b21b6;--pink:#ec4899;--yellow:#fbbf24;--green:#10b981;--bg:#f5f3ff;--gray:#6b7280;--radius:20px;--shadow:0 4px 20px rgba(124,58,237,.15)}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Helvetica Neue',Arial,sans-serif;background:var(--bg);min-height:100vh;display:flex;justify-content:center;font-size:18px}
+#app{width:100%;max-width:560px;min-height:100vh;background:var(--bg);overflow-x:hidden}
+.screen{display:none;min-height:100vh;padding:18px;padding-bottom:50px}
+.screen.active{display:block}
+/* HOME */
+.home-header{background:linear-gradient(135deg,var(--purple),var(--purple-light));border-radius:var(--radius);padding:20px;color:#fff;text-align:center;margin-bottom:12px;position:relative}
+.home-title{font-size:1.9rem;font-weight:900}
+.home-subtitle{font-size:.95rem;opacity:.85;margin-top:4px}
+.coins-badge{position:absolute;top:12px;right:12px;background:rgba(255,255,255,.2);border-radius:20px;padding:6px 12px;font-size:.9rem;font-weight:700;cursor:pointer}
+.card{background:#fff;border-radius:var(--radius);padding:14px 16px;margin-bottom:10px;box-shadow:var(--shadow)}
+.progress-label{display:flex;justify-content:space-between;font-size:.82rem;color:var(--gray);margin-bottom:8px}
+.progress-bar{height:10px;background:var(--purple-pale);border-radius:10px;overflow:hidden}
+.progress-fill{height:100%;background:linear-gradient(90deg,var(--purple),var(--purple-light));border-radius:10px;transition:width .6s}
+.map-title{font-size:.85rem;color:var(--gray);margin-bottom:10px}
+.map-grid{display:grid;grid-template-columns:repeat(6,1fr);gap:6px}
+.map-piece{aspect-ratio:1;border-radius:8px;background:var(--purple-pale);display:flex;align-items:center;justify-content:center;font-size:1.1rem;border:2px dashed #c4b5fd;transition:all .3s}
+.map-piece.earned{background:linear-gradient(135deg,var(--purple-light),var(--purple));border:2px solid var(--purple);animation:mapPop .4s}
+@keyframes mapPop{0%{transform:scale(.8)}60%{transform:scale(1.15)}100%{transform:scale(1)}}
+.daily-section{background:linear-gradient(135deg,#fef3c7,#fde68a);border-radius:var(--radius);padding:14px 16px;margin-bottom:10px;border:2px solid #fbbf24}
+.daily-header{font-size:.85rem;font-weight:700;color:#92400e;margin-bottom:6px}
+.daily-task{font-size:.9rem;color:#78350f}
+.daily-reward{font-size:.8rem;color:#92400e;margin-top:4px}
+.greeting-section{background:#fff;border-radius:var(--radius);padding:14px 16px;margin-bottom:10px;box-shadow:var(--shadow);display:flex;gap:12px;align-items:center}
+.greeting-text{font-size:.88rem;line-height:1.5;color:#374151;flex:1}
+.dog-mini{width:60px;height:60px;border-radius:14px;overflow:hidden;flex-shrink:0;border:3px solid var(--purple-light)}
+.dog-mini img{width:100%;height:100%;object-fit:cover}
+.stages-title{font-size:1rem;font-weight:700;color:var(--purple-dark);margin-bottom:10px}
+.stage-card{background:#fff;border-radius:var(--radius);padding:14px 16px;margin-bottom:8px;box-shadow:var(--shadow);display:flex;align-items:center;gap:12px;cursor:pointer;border:2px solid transparent;transition:all .2s;position:relative;overflow:hidden}
+.stage-card:active{transform:scale(.98)}
+.stage-card.locked{opacity:.55;cursor:default;filter:grayscale(.4)}
+.stage-card.today-task{border-color:var(--purple-light);background:linear-gradient(135deg,#fff,var(--purple-pale))}
+.stage-icon{width:58px;height:58px;background:var(--purple-pale);border-radius:16px;display:flex;align-items:center;justify-content:center;font-size:1.7rem;flex-shrink:0}
+.stage-info{flex:1}
+.stage-name{font-weight:700;font-size:1.1rem;color:#1f2937}
+.stage-desc{font-size:.9rem;color:var(--gray);margin-top:3px}
+.stage-stars{font-size:1.2rem;margin-top:5px}
+.stage-badge-new{position:absolute;top:8px;right:8px;background:var(--pink);color:#fff;font-size:.65rem;font-weight:700;padding:2px 7px;border-radius:10px}
+/* QUIZ */
+.quiz-header{display:flex;align-items:center;gap:12px;margin-bottom:14px;padding-top:8px}
+.quiz-back{width:36px;height:36px;border-radius:10px;background:#fff;border:none;font-size:1.2rem;cursor:pointer;display:flex;align-items:center;justify-content:center;box-shadow:var(--shadow)}
+.quiz-stage-name{font-weight:700;font-size:.95rem;color:var(--purple-dark);flex:1}
+.quiz-streak{background:linear-gradient(135deg,#ef4444,#f97316);color:#fff;border-radius:12px;padding:4px 10px;font-size:.8rem;font-weight:700;display:none}
+.quiz-streak.show{display:block}
+.quiz-progress{display:flex;gap:6px;margin-bottom:14px}
+.q-dot{flex:1;height:6px;background:#e5e7eb;border-radius:3px;transition:background .3s}
+.q-dot.done{background:var(--purple)}
+.q-dot.current{background:var(--purple-light)}
+.quiz-dog-wrap{display:flex;justify-content:center;margin-bottom:12px}
+.dog-frame{width:120px;height:120px;border-radius:30px;overflow:hidden;border:4px solid #fff;box-shadow:0 8px 28px rgba(124,58,237,.2)}
+.dog-frame img{width:100%;height:100%;object-fit:cover}
+.crop-ding-main img{object-position:62% 22%}
+.crop-ding-run img{object-position:60% 25%}
+.crop-pipi-happy img{object-position:42% 18%}
+.crop-pipi-run img{object-position:50% 22%}
+@keyframes wag{0%,100%{transform:rotate(0)}25%{transform:rotate(-8deg)}75%{transform:rotate(8deg)}}
+@keyframes jump{0%,100%{transform:translateY(0)}40%{transform:translateY(-22px)}60%{transform:translateY(-14px)}}
+@keyframes shake{0%,100%{transform:translateX(0)}25%{transform:translateX(-5px)}75%{transform:translateX(5px)}}
+.dog-frame.wag{animation:wag .6s ease}
+.dog-frame.jump{animation:jump .65s ease}
+.dog-frame.shake{animation:shake .4s ease 2}
+.quiz-card{background:#fff;border-radius:var(--radius);padding:18px;box-shadow:var(--shadow);margin-bottom:14px}
+.quiz-num{font-size:.9rem;color:var(--gray);margin-bottom:8px}
+.quiz-question{font-size:1.25rem;font-weight:700;color:#1f2937;line-height:1.6;white-space:pre-line}
+.quiz-hint{font-size:.95rem;color:#d97706;margin-top:12px;background:#fef3c7;padding:10px 14px;border-radius:12px}
+.choices-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px}
+.choice-btn{background:#fff;border:2px solid #e5e7eb;border-radius:16px;padding:18px 10px;font-size:1.2rem;font-weight:700;color:#374151;cursor:pointer;transition:all .2s;text-align:center}
+.choice-btn:active{transform:scale(.96)}
+.choice-btn.ok{background:#d1fae5;border-color:#10b981;color:#065f46}
+.choice-btn.bad{background:#fee2e2;border-color:#ef4444;color:#991b1b}
+.choice-btn.reveal{background:#d1fae5;border-color:#10b981}
+.fill-wrap{display:flex;gap:10px;margin-bottom:14px;align-items:center}
+.fill-input{flex:1;border:2px solid #e5e7eb;border-radius:16px;padding:16px 16px;font-size:1.5rem;font-weight:700;text-align:center;outline:none;transition:border-color .2s}
+.fill-input:focus{border-color:var(--purple-light)}
+.fill-submit{background:var(--purple);color:#fff;border:none;border-radius:16px;padding:16px 20px;font-size:1.1rem;font-weight:700;cursor:pointer}
+/* FEEDBACK */
+#overlay-feedback{position:fixed;top:0;left:50%;transform:translateX(-50%);width:100%;max-width:480px;height:100%;background:rgba(0,0,0,.5);z-index:100;display:none;align-items:flex-end}
+#overlay-feedback.show{display:flex}
+.feedback-panel{background:#fff;border-radius:24px 24px 0 0;padding:20px 20px 32px;width:100%;max-height:88vh;overflow-y:auto}
+.fb-result{text-align:center;font-size:1.5rem;font-weight:900;margin-bottom:10px}
+.fb-result.ok{color:var(--green)}
+.fb-result.bad{color:#ef4444}
+.fb-compare{background:#f9fafb;border-radius:12px;padding:12px;margin-bottom:10px;font-size:.88rem}
+.fb-compare .your{color:#ef4444;margin-bottom:4px}
+.fb-compare .right{color:var(--green);font-weight:700}
+.fb-explain{font-size:.9rem;line-height:1.6;color:#374151;margin-bottom:10px}
+.fb-error{background:#fef2f2;border-left:4px solid #ef4444;border-radius:0 10px 10px 0;padding:10px 12px;font-size:.85rem;color:#991b1b;margin-bottom:10px}
+.fb-tip{background:#eff6ff;border-radius:10px;padding:10px 12px;font-size:.82rem;color:#1d4ed8;margin-bottom:12px}
+.vert-wrap{margin-bottom:12px}
+.vert-label{font-size:.8rem;font-weight:700;color:var(--purple);margin-bottom:6px}
+.vert-box{background:#fffbeb;border:2px solid #fcd34d;border-radius:14px;padding:14px 18px}
+.vert-table{border-collapse:collapse;margin:0 auto}
+.vert-table td{font-family:'Courier New',Courier,monospace;font-size:1.1rem;line-height:2;text-align:right;padding:0 3px}
+.vert-table td.partial{color:#6b7280}
+.vert-table td.ans{color:var(--purple);font-weight:900}
+.vert-sep{border-top:2.5px solid #374151;margin:2px 0}
+.vert-note{font-size:.78rem;color:#d97706;background:#fef3c7;border-radius:8px;padding:6px 10px;margin-top:8px}
+.fb-actions{display:flex;gap:10px;margin-top:14px}
+.btn-retry{flex:1;background:#fff;border:2px solid var(--purple-light);border-radius:14px;padding:14px;font-size:.95rem;font-weight:700;color:var(--purple);cursor:pointer}
+.btn-next{flex:2;background:linear-gradient(135deg,var(--purple),var(--purple-light));border:none;border-radius:14px;padding:14px;font-size:.95rem;font-weight:700;color:#fff;cursor:pointer}
+/* RESULT */
+.result-header{text-align:center;padding:20px 0 10px}
+.result-dogs{display:flex;justify-content:center;gap:16px;margin:14px 0}
+.result-dog{width:88px;height:88px;border-radius:22px;overflow:hidden;border:4px solid #fff;box-shadow:var(--shadow)}
+.result-dog img{width:100%;height:100%;object-fit:cover}
+.result-stars{display:flex;justify-content:center;gap:8px;margin:10px 0}
+.result-star{font-size:2.4rem}
+.result-star.earned{animation:starPop .4s ease forwards}
+@keyframes starPop{0%{transform:scale(0)}60%{transform:scale(1.3)}100%{transform:scale(1)}}
+.result-msg{font-size:1rem;color:#374151;margin:6px 0;line-height:1.5}
+.result-coins{background:#fef3c7;border:2px solid #fbbf24;border-radius:14px;padding:12px;text-align:center;margin:10px 0;font-weight:700;color:#92400e}
+.pipi-enc{background:var(--purple-pale);border-radius:var(--radius);padding:14px;margin:10px 0;display:flex;gap:12px;align-items:center}
+.pipi-enc-text{font-size:.88rem;line-height:1.5;color:var(--purple-dark);flex:1}
+.curiosity{background:linear-gradient(135deg,#fce7f3,#fbcfe8);border:2px solid var(--pink);border-radius:var(--radius);padding:14px;margin:10px 0;font-size:.88rem;color:#be185d;line-height:1.5}
+.result-actions{display:flex;flex-direction:column;gap:10px;margin-top:14px}
+.btn-primary{background:linear-gradient(135deg,var(--purple),var(--purple-light));border:none;border-radius:var(--radius);padding:18px;font-size:1.15rem;font-weight:700;color:#fff;cursor:pointer;width:100%}
+.btn-secondary{background:#fff;border:2px solid var(--purple-light);border-radius:var(--radius);padding:16px;font-size:1.05rem;font-weight:700;color:var(--purple);cursor:pointer;width:100%}
+/* SHOP */
+.shop-header{display:flex;align-items:center;gap:12px;padding:14px 0 8px}
+.shop-coins-disp{background:var(--purple-pale);border-radius:20px;padding:6px 14px;font-weight:700;color:var(--purple-dark);font-size:.9rem;margin-left:auto}
+.shop-section{margin-bottom:18px}
+.shop-section-title{font-size:.82rem;font-weight:700;color:var(--gray);margin-bottom:10px;text-transform:uppercase}
+.shop-items{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.shop-item{background:#fff;border-radius:var(--radius);padding:14px;text-align:center;border:2px solid #e5e7eb;box-shadow:var(--shadow)}
+.shop-item.owned{border-color:var(--green);background:#f0fdf4}
+.shop-item.dim{opacity:.6}
+.shop-item-icon{font-size:2rem;margin-bottom:6px}
+.shop-item-name{font-size:.85rem;font-weight:700;color:#374151;margin-bottom:4px}
+.shop-item-price{font-size:.8rem;color:var(--gray);margin-bottom:8px}
+.shop-item-price.afford{color:var(--purple)}
+.shop-buy-btn{background:var(--purple);color:#fff;border:none;border-radius:10px;padding:7px 14px;font-size:.82rem;font-weight:700;cursor:pointer;width:100%}
+.shop-buy-btn:disabled{background:#d1d5db;cursor:default}
+.shop-buy-btn.owned-btn{background:var(--green)}
+.shop-remaining{font-size:.72rem;color:var(--gray);margin-top:4px}
+/* BADGE */
+.badge-screen{text-align:center;padding:24px 16px}
+.badge-icon{font-size:5rem;margin:18px 0}
+.badge-title{font-size:1.4rem;font-weight:900;color:var(--purple-dark)}
+.badge-name{font-size:1.1rem;font-weight:700;color:var(--purple);margin:8px 0 16px}
+.report-card{background:#fff;border-radius:var(--radius);padding:18px;box-shadow:var(--shadow);margin:14px 0;text-align:left}
+.report-title{font-weight:700;color:var(--purple-dark);margin-bottom:12px;text-align:center}
+.report-row{display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid #f3f4f6;font-size:.88rem}
+.report-row:last-child{border-bottom:none}
+.report-ach{background:var(--purple-pale);border-radius:10px;padding:8px 12px;margin-top:6px;font-size:.82rem;color:var(--purple-dark)}
+.next-adv{background:linear-gradient(135deg,var(--purple-pale),#ddd6fe);border-radius:var(--radius);padding:14px;text-align:center;font-size:.85rem;color:var(--purple-dark);margin-top:10px}
+/* CONFETTI */
+.confetti-container{position:fixed;top:0;left:0;width:100%;height:100%;pointer-events:none;z-index:200;display:none}
+.confetti-container.active{display:block}
+.confetti-piece{position:absolute;border-radius:2px;animation:fall linear forwards}
+@keyframes fall{0%{transform:translateY(-20px) rotate(0);opacity:1}100%{transform:translateY(105vh) rotate(720deg);opacity:0}}
+.toast{position:fixed;bottom:70px;left:50%;transform:translateX(-50%) translateY(20px);background:#1f2937;color:#fff;border-radius:20px;padding:10px 20px;font-size:.88rem;font-weight:700;opacity:0;transition:all .3s;z-index:150;max-width:90%;text-align:center}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+</style>
+</head>
+<body>
+<div id="app">
+
+<!-- HOME -->
+<div id="screen-home" class="screen active">
+  <div class="home-header">
+    <div class="home-title">🐾 FuFu 數學冒險</div>
+    <div class="home-subtitle">翰林版四年級下學期・小數乘法</div>
+    <div class="coins-badge" onclick="showShop()">🦴 <span id="coins-display">0</span></div>
+  </div>
+  <div class="card">
+    <div class="progress-label"><span>冒險進度</span><span id="progress-pct">0%</span></div>
+    <div class="progress-bar"><div class="progress-fill" id="progress-fill" style="width:0%"></div></div>
+  </div>
+  <div class="card">
+    <div class="map-title">🗺️ 小數魔法地圖碎片</div>
+    <div class="map-grid" id="map-grid"></div>
+  </div>
+  <div class="greeting-section">
+    <div class="dog-mini crop-ding-main"><img src="dogs/ding-main.jpg" alt="丁丁"></div>
+    <div class="greeting-text" id="greeting-text"></div>
+  </div>
+  <div class="daily-section">
+    <div class="daily-header">⭐ 今日挑戰</div>
+    <div class="daily-task" id="daily-task-text"></div>
+    <div class="daily-reward" id="daily-reward-text"></div>
+  </div>
+  <div class="stages-title">今天想從哪裡開始？</div>
+  <div id="stages-list"></div>
+</div>
+
+<!-- SHOP -->
+<div id="screen-shop" class="screen">
+  <div class="shop-header">
+    <button class="quiz-back" onclick="showHome()">←</button>
+    <div style="font-size:1.2rem;font-weight:900;color:var(--purple-dark)">🛍️ 寵物商店</div>
+    <div class="shop-coins-disp">🦴 <span id="shop-coins-disp">0</span></div>
+  </div>
+  <div id="shop-content"></div>
+</div>
+
+<!-- QUIZ -->
+<div id="screen-quiz" class="screen">
+  <div class="quiz-header">
+    <button class="quiz-back" onclick="confirmBack()">←</button>
+    <div class="quiz-stage-name" id="quiz-stage-name"></div>
+    <div class="quiz-streak" id="quiz-streak">🔥 <span id="streak-count">0</span> 連勝</div>
+  </div>
+  <div class="quiz-progress" id="quiz-progress"></div>
+  <div class="quiz-dog-wrap">
+    <div class="dog-frame crop-ding-main" id="quiz-dog">
+      <img src="dogs/ding-main.jpg" alt="丁丁" id="quiz-dog-img">
+    </div>
+  </div>
+  <div class="quiz-card">
+    <div class="quiz-num" id="quiz-num"></div>
+    <div class="quiz-question" id="quiz-question"></div>
+    <div class="quiz-hint" id="quiz-hint" style="display:none"></div>
+  </div>
+  <div id="answer-area"></div>
+</div>
+
+<!-- FEEDBACK OVERLAY -->
+<div id="overlay-feedback">
+  <div class="feedback-panel">
+    <div class="fb-result" id="fb-result"></div>
+    <div class="fb-compare" id="fb-compare" style="display:none"></div>
+    <div class="fb-explain" id="fb-explain"></div>
+    <div class="fb-error" id="fb-error" style="display:none"></div>
+    <div class="fb-tip" id="fb-tip" style="display:none"></div>
+    <div class="vert-wrap" id="fb-vert" style="display:none">
+      <div class="vert-label">📐 直式算法</div>
+      <div class="vert-box">
+        <div id="vert-content"></div>
+        <div class="vert-note" id="vert-note"></div>
+      </div>
+    </div>
+    <div class="fb-actions">
+      <button class="btn-retry" id="btn-retry" onclick="retryQ()">再試一次</button>
+      <button class="btn-next" onclick="nextQ()">繼續 →</button>
+    </div>
+  </div>
+</div>
+
+<!-- RESULT -->
+<div id="screen-result" class="screen">
+  <div class="result-header">
+    <div style="font-size:1.3rem;font-weight:900;color:var(--purple-dark)" id="result-title"></div>
+    <div class="result-dogs">
+      <div class="result-dog crop-ding-run"><img src="dogs/ding-run.jpg" alt="丁丁"></div>
+      <div class="result-dog crop-pipi-happy"><img src="dogs/pipi-happy.jpg" alt="皮皮"></div>
+    </div>
+    <div class="result-stars" id="result-stars"></div>
+    <div class="result-msg" id="result-msg"></div>
+  </div>
+  <div class="result-coins" id="result-coins"></div>
+  <div class="pipi-enc" id="pipi-enc" style="display:none">
+    <div class="dog-mini crop-pipi-happy" style="width:54px;height:54px"><img src="dogs/pipi-happy.jpg" alt="皮皮"></div>
+    <div class="pipi-enc-text" id="pipi-enc-text"></div>
+  </div>
+  <div class="curiosity" id="curiosity" style="display:none"></div>
+  <div class="result-actions">
+    <button class="btn-primary" onclick="retryStage()">🔄 再玩一次</button>
+    <button class="btn-secondary" onclick="showHome()">🏠 回首頁</button>
+  </div>
+</div>
+
+<!-- BADGE -->
+<div id="screen-badge" class="screen badge-screen">
+  <div style="font-size:1.2rem;font-weight:900;color:var(--purple-dark)">🎉 恭喜芙芙！</div>
+  <div class="badge-icon">🏅</div>
+  <div class="badge-title">你獲得了</div>
+  <div class="badge-name">「小數乘法勇者」徽章</div>
+  <div class="report-card" id="report-card"></div>
+  <div class="next-adv">🐾 下一個冒險：小數除法，芙芙你準備好了嗎？</div>
+  <div class="result-actions" style="margin-top:14px">
+    <button class="btn-primary" onclick="shareResult()">📸 截圖分享</button>
+    <button class="btn-secondary" onclick="showHome()">🏠 回首頁</button>
+  </div>
+</div>
+
+<div class="confetti-container" id="confetti"></div>
+<div class="toast" id="toast"></div>
+
+<script>
+const STAGES=[
+ {id:'warmup',name:'估算暖身',icon:'🌡️',desc:'先感受數字的大小！',unlock:[],coins:[0,0,3],
+  questions:[
+   {text:'3.8 × 6 大約等於多少？\n（把 3.8 當成 4 來想！）',type:'choice',choices:['2','24','240'],answer:'24',explain:'把 3.8 四捨五入當 <b>4</b>，4 × 6 = <b>24</b>，積大約是 24。',hint:'💡 把小數四捨五入成整數再算！'},
+   {text:'1.9 × 5 大約等於多少？\n（把 1.9 當成 2 來想！）',type:'choice',choices:['1','10','100'],answer:'10',explain:'把 1.9 四捨五入當 <b>2</b>，2 × 5 = <b>10</b>，積大約是 10。',hint:'💡 1.9 非常接近 2！'},
+   {text:'4.2 × 8 大約等於多少？\n（把 4.2 當成 4 來想！）',type:'choice',choices:['3','32','320'],answer:'32',explain:'把 4.2 四捨五入當 <b>4</b>，4 × 8 = <b>32</b>，積大約是 32。',hint:'💡 4.2 接近 4，先估算！'},
+  ]},
+ {id:'6-1',name:'6-1 小數×一位數',icon:'🐾',desc:'一步一步，從簡單開始！',unlock:['warmup'],coins:[5,10,15],
+  questions:[
+   {text:'丁丁每天喝 0.3 公升的水，\n4 天共喝幾公升？\n\n0.3 × 4 = ？',type:'choice',choices:['1.2','0.12','12','1.6'],answer:'1.2',vert:[0.3,4],hint:'💡 先算 3 × 4 = 12，再補回小數點！',explain:'<b>0.3 × 4 = 1.2</b>',tip:'小提示：3 × 0.4 和 0.4 × 3 答案一樣喔！（交換律）',err:{'0.12':'小數點移錯了！0.3 只有 1 位小數，往左移 1 位就好。','12':'別忘了補回小數點！3 × 4 = 12，有 1 位小數，答案是 1.2。','1.6':'乘錯囉，3 × 4 = 12，不是 16。'}},
+   {text:'皮皮每天跑 0.9 公里，\n跑 9 天共幾公里？\n\n0.9 × 9 = ？',type:'choice',choices:['8.1','7.2','9.9','0.81'],answer:'8.1',vert:[0.9,9],hint:'💡 先算 9 × 9 = 81，再補回小數點！',explain:'<b>0.9 × 9 = 8.1</b>',tip:'小提示：0.9 × 9 和 9 × 0.9 一樣喔！（交換律）',err:{'7.2':'算錯囉！9 × 9 = 81，不是 72。','9.9':'把加法和乘法搞混了！','0.81':'小數點移太多了！0.9 有 1 位小數。'}},
+   {text:'一條緞帶長 1.5 公尺，\n買了 6 條共幾公尺？\n\n1.5 × 6 = ？',type:'choice',choices:['9','8.5','9.5','0.9'],answer:'9',vert:[1.5,6],hint:'💡 先算 15 × 6 = 90，再補小數點 → 9.0 = 9！',explain:'<b>1.5 × 6 = 9</b>',err:{'8.5':'算錯了！15 × 6 = 90，不是 85。','9.5':'小小錯誤，15 × 6 是 90，不是 95。','0.9':'小數點移錯方向了！'}},
+   {text:'丁丁的玩具每個重 2.4 公斤，\n買了 7 個共幾公斤？\n\n2.4 × 7 = ？',type:'choice',choices:['16.8','14.8','168','1.68'],answer:'16.8',vert:[2.4,7],hint:'💡 24 × 7 = 168，再補小數點！',explain:'<b>2.4 × 7 = 16.8</b>',err:{'14.8':'算錯了！24 × 7 = 168，不是 148。','168':'別忘了補小數點！','1.68':'小數點移太多了！'}},
+   {text:'一個蘋果重 0.45 公斤，\n買了 8 個共幾公斤？\n\n0.45 × 8 = ？',type:'choice',choices:['3.6','36','3.60','0.36'],answer:'3.6',vert:[0.45,8],hint:'💡 45 × 8 = 360，有 2 位小數 → 3.60 = 3.6',explain:'<b>0.45 × 8 = 3.6</b>',err:{'36':'別忘了補小數點！0.45 有 2 位小數。','3.60':'3.60 和 3.6 一樣，答對囉！','0.36':'移了 3 位，太多了！'}},
+   {text:'皮皮每天需要 3.85 公斤飼料，\n4 天共需幾公斤？\n\n3.85 × 4 = ？',type:'choice',choices:['15.4','15.40','154','1.540'],answer:'15.4',vert:[3.85,4],hint:'💡 385 × 4 = 1540，補 2 位小數 → 15.40 = 15.4',explain:'<b>3.85 × 4 = 15.4</b>',err:{'15.40':'15.40 和 15.4 一樣，答對了！末尾的 0 可以省略。','154':'別忘了補小數點！3.85 有 2 位小數。','1.540':'移了 3 位，太多了！'}},
+  ]},
+ {id:'6-2',name:'6-2 小數×兩位數',icon:'🌟',desc:'兩位數，更有趣！',unlock:['6-1'],coins:[5,10,15],
+  curiosity:'皮皮說：「我有一個超難的題目想考你，但要先過 6-3 才能看到 👀」',
+  questions:[
+   {text:'丁丁跑了 2.3 公里，\n皮皮跑了 12 倍，\n皮皮跑了幾公里？\n\n2.3 × 12 = ？',type:'choice',choices:['27.6','2.76','276','25.3'],answer:'27.6',vert:[2.3,12],hint:'💡 23 × 12 = 276，再補 1 位小數！',explain:'<b>2.3 × 12 = 27.6</b>',err:{'2.76':'移了 2 位，太多！只有 1 位小數。','276':'別忘了補小數點！','25.3':'不是加法喔！'}},
+   {text:'一塊布料長 0.8 公尺，\n買了 15 塊共幾公尺？\n\n0.8 × 15 = ？',type:'choice',choices:['12','1.2','120','8.15'],answer:'12',vert:[0.8,15],hint:'💡 8 × 15 = 120，補 1 位小數 → 12.0 = 12',explain:'<b>0.8 × 15 = 12</b>',err:{'1.2':'移太多了！答案是 12。','120':'別忘了補小數點！','8.15':'這不是加法！'}},
+   {text:'每瓶果汁 1.25 公升，\n買了 24 瓶共幾公升？\n\n1.25 × 24 = ？',type:'choice',choices:['30','3','300','29.75'],answer:'30',vert:[1.25,24],hint:'💡 125 × 24 = 3000，補 2 位小數 → 30.00 = 30',explain:'<b>1.25 × 24 = 30</b>',err:{'3':'移太多！答案是 30。','300':'別忘了補小數點！','29.75':'計算錯誤，125 × 24 = 3000。'}},
+   {text:'丁丁每天散步 3.6 公里，\n一個月（30天）共幾公里？\n\n3.6 × 30 = ？',type:'choice',choices:['108','10.8','1080','1.08'],answer:'108',vert:[3.6,30],hint:'💡 36 × 30 = 1080，補 1 位小數 → 108.0 = 108',explain:'<b>3.6 × 30 = 108</b>',err:{'10.8':'移太多！答案是 108。','1080':'別忘了補小數點！','1.08':'移了 3 位，太多！'}},
+   {text:'一盒餅乾重 0.75 公斤，\n買了 18 盒共幾公斤？\n\n0.75 × 18 = ？',type:'choice',choices:['13.5','1.35','135','14.25'],answer:'13.5',vert:[0.75,18],hint:'💡 75 × 18 = 1350，補 2 位小數 → 13.50 = 13.5',explain:'<b>0.75 × 18 = 13.5</b>',err:{'1.35':'移了 3 位，太多！','135':'別忘了補小數點！','14.25':'計算錯誤。'}},
+   {text:'皮皮的小屋每邊長 2.35 公尺，\n圍欄圍一圈需要幾公尺？\n（一圈 = 4 條邊）\n\n2.35 × 4 = ？',type:'choice',choices:['9.4','9.0','94','0.94'],answer:'9.4',vert:[2.35,4],hint:'💡 235 × 4 = 940，補 2 位小數！',explain:'<b>2.35 × 4 = 9.40 = 9.4 公尺</b>',err:{'9.0':'接近了！235 × 4 = 940，補 2 位是 9.40 = 9.4。','94':'別忘了補小數點！','0.94':'移太多了！'}},
+  ]},
+ {id:'6-3',name:'6-3 小數×多位數',icon:'💫',desc:'挑戰更大的數字！',unlock:['6-2'],coins:[5,10,15],
+  questions:[
+   {text:'一台跑步機每小時耗電 1.25 度，\n皮皮跑了 16 小時，\n共耗電幾度？\n\n1.25 × 16 = ？',type:'choice',choices:['20','2','200','19.75'],answer:'20',vert:[1.25,16],hint:'💡 125 × 16 = 2000，補 2 位小數！',explain:'<b>1.25 × 16 = 20</b>',err:{'2':'移太多！答案是 20。','200':'別忘了補小數點！','19.75':'計算錯誤。'}},
+   {text:'一節課 0.75 小時，\n一週上 32 節課，\n共幾小時？\n\n0.75 × 32 = ？',type:'choice',choices:['24','2.4','240','23.5'],answer:'24',vert:[0.75,32],hint:'💡 75 × 32 = 2400，補 2 位小數！',explain:'<b>0.75 × 32 = 24</b>',err:{'2.4':'移太多！答案是 24。','240':'別忘了補小數點！','23.5':'計算錯誤。'}},
+   {text:'一包飼料重 3.75 公斤，\n買了 48 包共幾公斤？\n\n3.75 × 48 = ？',type:'choice',choices:['180','18','1800','178.25'],answer:'180',vert:[3.75,48],hint:'💡 375 × 48 = 18000，補 2 位小數！',explain:'<b>3.75 × 48 = 180</b>',err:{'18':'移太多！答案是 180。','1800':'別忘了補小數點！','178.25':'計算錯誤。'}},
+   {text:'丁丁每步走 0.625 公尺，\n走了 64 步，\n共走幾公尺？\n\n0.625 × 64 = ？',type:'choice',choices:['40','4','400','39.5'],answer:'40',vert:[0.625,64],hint:'💡 625 × 64 = 40000，補 3 位小數！',explain:'<b>0.625 × 64 = 40</b>',err:{'4':'移太多！答案是 40。','400':'別忘了補小數點！','39.5':'計算錯誤。'}},
+   {text:'一罐蜂蜜 1.875 公斤，\n買了 32 罐共幾公斤？\n\n1.875 × 32 = ？',type:'choice',choices:['60','6','600','59.625'],answer:'60',vert:[1.875,32],hint:'💡 1875 × 32 = 60000，補 3 位小數！',explain:'<b>1.875 × 32 = 60</b>',err:{'6':'移太多！答案是 60。','600':'別忘了補小數點！','59.625':'計算錯誤。'}},
+   {text:'皮皮的食盆每個重 2.125 公斤，\n一箱裝了 24 個，\n一箱共幾公斤？\n\n2.125 × 24 = ？',type:'choice',choices:['51','5.1','510','50.75'],answer:'51',vert:[2.125,24],hint:'💡 2125 × 24 = 51000，補 3 位小數！',explain:'<b>2.125 × 24 = 51</b>',err:{'5.1':'移太多！答案是 51。','510':'別忘了補小數點！','50.75':'計算錯誤。'}},
+  ]},
+ {id:'6-4',name:'6-4 生活應用題',icon:'🏠',desc:'用數學解決生活問題！',unlock:['6-1'],coins:[5,10,20],
+  questions:[
+   {text:'丁丁每天吃 0.35 公斤的飼料，\n7 天共吃幾公斤？\n\n0.35 × 7 = ？',type:'fill',answer:'2.45',vert:[0.35,7],hint:'💡 35 × 7 = 245，補 2 位小數！',explain:'<b>0.35 × 7 = 2.45 公斤</b>'},
+   {text:'一條緞帶長 2.4 公尺，\n裁成 6 段，\n共需幾公尺？\n\n2.4 × 6 = ？',type:'fill',answer:'14.4',vert:[2.4,6],hint:'💡 24 × 6 = 144，補 1 位小數！',explain:'<b>2.4 × 6 = 14.4 公尺</b>'},
+   {text:'一瓶果汁 1.5 元，\n買了 8 瓶共幾元？\n\n1.5 × 8 = ？',type:'fill',answer:'12',vert:[1.5,8],hint:'💡 15 × 8 = 120，補 1 位小數 → 12.0 = 12！',explain:'<b>1.5 × 8 = 12 元</b>'},
+   {text:'芙芙每天走 3.2 公里，\n5 天共走幾公里？\n\n3.2 × 5 = ？',type:'fill',answer:'16',vert:[3.2,5],hint:'💡 32 × 5 = 160，補 1 位小數 → 16.0 = 16！',explain:'<b>3.2 × 5 = 16 公里</b>'},
+   {text:'皮皮的餅乾每片重 0.45 公斤，\n吃了 4 片，\n共吃幾公斤？\n\n0.45 × 4 = ？',type:'fill',answer:'1.8',vert:[0.45,4],hint:'💡 45 × 4 = 180，補 2 位小數 → 1.80 = 1.8！',explain:'<b>0.45 × 4 = 1.8 公斤</b>'},
+   {text:'一支鉛筆長 1.25 公分，\n6 支接在一起共幾公分？\n\n1.25 × 6 = ？',type:'fill',answer:'7.5',vert:[1.25,6],hint:'💡 125 × 6 = 750，補 2 位小數 → 7.50 = 7.5！',explain:'<b>1.25 × 6 = 7.5 公分</b>'},
+  ]},
+ {id:'boss',name:'BOSS 綜合挑戰',icon:'🏆',desc:'丁丁皮皮的終極考驗！',unlock:['6-3','6-4'],coins:[10,20,30],
+  bossIntro:'丁丁說：「我偷偷準備了一個特別獎勵，答對最後一題才會出現⋯ 👀」',
+  questions:[
+   {text:'（第 1 關）\n0.6 × 7 = ？',type:'choice',choices:['4.2','0.42','42','4.8'],answer:'4.2',vert:[0.6,7],hint:'💡 6 × 7 = 42，補 1 位小數！',explain:'<b>0.6 × 7 = 4.2</b>',err:{'0.42':'移太多！答案是 4.2。','42':'別忘了補小數點！','4.8':'算錯了！6×7=42。'}},
+   {text:'（第 2 關）\n1.8 × 15 = ？',type:'choice',choices:['27','2.7','270','25.8'],answer:'27',vert:[1.8,15],hint:'💡 18 × 15 = 270，補 1 位小數！',explain:'<b>1.8 × 15 = 27</b>',err:{'2.7':'移太多！答案是 27。','270':'別忘了補小數點！','25.8':'計算錯誤。'}},
+   {text:'（第 3 關）\n皮皮每天吃 0.75 公斤飼料，\n一週（7天）共吃幾公斤？',type:'choice',choices:['5.25','52.5','0.525','5.5'],answer:'5.25',vert:[0.75,7],hint:'💡 75 × 7 = 525，補 2 位小數！',explain:'<b>0.75 × 7 = 5.25 公斤</b>',err:{'52.5':'補了 1 位，應補 2 位。','0.525':'移太多了！','5.5':'計算錯誤。'}},
+   {text:'（第 4 關）\n一塊磁磚長 2.35 公尺，\n鋪了 16 塊共幾公尺？\n\n2.35 × 16 = ？',type:'choice',choices:['37.6','3.76','376','36.6'],answer:'37.6',vert:[2.35,16],hint:'💡 235 × 16 = 3760，補 2 位小數！',explain:'<b>2.35 × 16 = 37.6</b>',err:{'3.76':'移了 3 位，太多！','376':'別忘了補小數點！','36.6':'計算錯誤。'}},
+   {text:'（第 5 關）\n一瓶牛奶 1.125 公升，\n買了 32 瓶共幾公升？\n\n1.125 × 32 = ？',type:'choice',choices:['36','3.6','360','35.625'],answer:'36',vert:[1.125,32],hint:'💡 1125 × 32 = 36000，補 3 位小數！',explain:'<b>1.125 × 32 = 36</b>',err:{'3.6':'移了 4 位，太多！','360':'別忘了補小數點！','35.625':'計算錯誤。'}},
+   {text:'（BOSS 最終關！🏆）\n丁丁跑了 3.75 公里，\n皮皮跑了丁丁的 24 倍，\n皮皮跑了幾公里？\n\n3.75 × 24 = ？',type:'choice',choices:['90','9','900','89.25'],answer:'90',vert:[3.75,24],hint:'💡 375 × 24 = 9000，補 2 位小數！',explain:'<b>3.75 × 24 = 90 公里</b>\n皮皮超快的！🐾',err:{'9':'移太多！答案是 90。','900':'別忘了補小數點！','89.25':'計算錯誤。'}},
+  ]},
+];
+
+const MAP_EMOJIS=['🗺️','⭐','🌈','🦋','🌸','🏆'];
+const GREETINGS=['丁丁說：「週一加油！今天先從暖身開始，慢慢來！🌟」','皮皮說：「週二的芙芙最可愛！昨天學的還記得嗎？」','丁丁說：「週三啦！已經過了一半，你做得很棒！💪」','皮皮說：「週四，再努力一下就到週末了！我陪你！✨」','丁丁說：「週五！今天練習完，週末可以好好玩！🎉」','皮皮說：「週六！放鬆一下，來玩個幾題吧～🌸」','丁丁說：「週日！明天要上學了，複習一下更安心！📚」'];
+const SHOP_ITEMS=[{id:'hat',icon:'🎩',name:'丁丁的帽子',price:30,type:'ding'},{id:'jacket',icon:'🧥',name:'丁丁的外套',price:50,type:'ding'},{id:'sticker',icon:'🐶',name:'皮皮貼圖包',price:25,type:'pipi'},{id:'secret',icon:'❓',name:'神秘第三隻狗',price:0,type:'secret',allStars:true}];
+
+let G={stars:{},coins:0,shop:{},dailyDate:'',dailyStage:'',dailyDone:false};
+let CUR={stage:null,qIdx:0,score:0,streak:0};
+
+function save(){localStorage.setItem('fufu3',JSON.stringify(G));}
+function load(){try{Object.assign(G,JSON.parse(localStorage.getItem('fufu3')||'{}'));}catch(e){}}
+function getStage(id){return STAGES.find(s=>s.id===id);}
+function isUnlocked(id){const s=getStage(id);return s&&s.unlock.every(d=>(G.stars[d]||0)>=1);}
+function totalStars(){return Object.values(G.stars).reduce((a,b)=>a+b,0);}
+function maxStars(){return STAGES.length*3;}
+function mapCount(){return STAGES.filter(s=>(G.stars[s.id]||0)>0).length;}
+function progressPct(){
+  const total=STAGES.reduce((a,s)=>a+s.questions.length,0);
+  const done=STAGES.reduce((a,s)=>{const st=G.stars[s.id]||0;return a+(st===3?s.questions.length:st===2?Math.floor(s.questions.length*.7):st===1?Math.floor(s.questions.length*.4):0);},0);
+  return Math.round(done/total*100);
+}
+function showScreen(id){document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));document.getElementById(id).classList.add('active');window.scrollTo(0,0);}
+function toast(msg){const t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),2800);}
+
+function showHome(){renderHome();showScreen('screen-home');}
+function renderHome(){
+  document.getElementById('coins-display').textContent=G.coins;
+  const pct=progressPct();
+  document.getElementById('progress-pct').textContent=pct+'%';
+  document.getElementById('progress-fill').style.width=pct+'%';
+  const mc=mapCount();
+  document.getElementById('map-grid').innerHTML=MAP_EMOJIS.map((e,i)=>`<div class="map-piece ${i<mc?'earned':''}">${i<mc?e:''}</div>`).join('');
+  const day=new Date().getDay();
+  document.getElementById('greeting-text').textContent=GREETINGS[day===0?6:day-1];
+  const today=new Date().toISOString().slice(0,10);
+  if(G.dailyDate!==today){
+    G.dailyDate=today;G.dailyDone=false;
+    const avail=STAGES.filter(s=>isUnlocked(s.id));
+    G.dailyStage=(avail[Math.floor(Math.random()*avail.length)]||STAGES[0]).id;
+    save();
+  }
+  const ds=getStage(G.dailyStage);
+  document.getElementById('daily-task-text').textContent=G.dailyDone?'✅ 今日挑戰完成！做得太棒了！':`在「${ds?.name||''}」拿到 3 顆星星`;
+  document.getElementById('daily-reward-text').textContent=G.dailyDone?'':'🦴 完成獲得雙倍骨頭幣！';
+  document.getElementById('stages-list').innerHTML=STAGES.map(s=>{
+    const locked=!isUnlocked(s.id),stars=G.stars[s.id]||0,isToday=s.id===G.dailyStage&&!G.dailyDone;
+    return `<div class="stage-card ${locked?'locked':''} ${isToday?'today-task':''}" onclick="${locked?'':` startStage('${s.id}')`}">
+      <div class="stage-icon">${s.icon}</div>
+      <div class="stage-info">
+        <div class="stage-name">${s.name}</div>
+        <div class="stage-desc">${s.desc}</div>
+        <div class="stage-stars">${[0,1,2].map(i=>i<stars?'⭐':'☆').join('')}</div>
+      </div>
+      ${locked?'<span style="font-size:1.2rem;color:#d1d5db">🔒</span>':''}
+      ${isToday?'<div class="stage-badge-new">今日</div>':''}
+    </div>`;
+  }).join('');
+}
+
+function startStage(id){
+  CUR.stage=getStage(id);if(!CUR.stage)return;
+  CUR.qIdx=0;CUR.score=0;CUR.streak=0;
+  document.getElementById('quiz-stage-name').textContent=CUR.stage.name;
+  if(CUR.stage.bossIntro)setTimeout(()=>toast(CUR.stage.bossIntro),400);
+  renderQ();showScreen('screen-quiz');
+}
+
+function renderQ(){
+  const q=CUR.stage.questions[CUR.qIdx];
+  document.getElementById('quiz-progress').innerHTML=CUR.stage.questions.map((_,i)=>`<div class="q-dot ${i<CUR.qIdx?'done':i===CUR.qIdx?'current':''}"></div>`).join('');
+  document.getElementById('quiz-num').textContent=`第 ${CUR.qIdx+1} 題，共 ${CUR.stage.questions.length} 題`;
+  document.getElementById('quiz-question').textContent=q.text;
+  const he=document.getElementById('quiz-hint');
+  if(q.hint){he.textContent=q.hint;he.style.display='block';}else he.style.display='none';
+  const se=document.getElementById('quiz-streak');
+  if(CUR.streak>=3){se.classList.add('show');document.getElementById('streak-count').textContent=CUR.streak;}else se.classList.remove('show');
+  const df=document.getElementById('quiz-dog');
+  df.className='dog-frame crop-ding-main';document.getElementById('quiz-dog-img').src='dogs/ding-main.jpg';
+  const area=document.getElementById('answer-area');
+  if(q.type==='fill'){
+    area.innerHTML=`<div class="fill-wrap"><input class="fill-input" id="fill-in" type="text" inputmode="numeric" placeholder="輸入答案" autocomplete="off"><button class="fill-submit" onclick="submitFill()">確認</button></div>`;
+    setTimeout(()=>document.getElementById('fill-in')?.focus(),100);
+    document.getElementById('fill-in').onkeydown=e=>{if(e.key==='Enter')submitFill();};
+  }else{
+    area.innerHTML=`<div class="choices-grid">${q.choices.map(c=>`<button class="choice-btn" onclick="pick(this,'${c}')">${c}</button>`).join('')}</div>`;
+  }
+}
+
+function pick(btn,val){
+  document.querySelectorAll('.choice-btn').forEach(b=>b.onclick=null);
+  const q=CUR.stage.questions[CUR.qIdx],ok=val===q.answer;
+  btn.classList.add(ok?'ok':'bad');
+  if(!ok)document.querySelectorAll('.choice-btn').forEach(b=>{if(b.textContent===q.answer)b.classList.add('reveal');});
+  handleResult(ok,val);
+}
+
+function submitFill(){
+  const inp=document.getElementById('fill-in');if(!inp)return;
+  const v=inp.value.trim();if(!v)return;
+  const q=CUR.stage.questions[CUR.qIdx];
+  const norm=x=>parseFloat(String(x).replace(/[^\d.]/g,''));
+  const ok=Math.abs(norm(v)-norm(q.answer))<0.0001;
+  inp.disabled=true;document.querySelector('.fill-submit').disabled=true;
+  handleResult(ok,v);
+}
+
+function handleResult(ok,userAns){
+  const df=document.getElementById('quiz-dog');
+  if(ok){
+    CUR.score++;CUR.streak++;
+    if(CUR.streak>=3){df.className='dog-frame crop-ding-run jump';document.getElementById('quiz-dog-img').src='dogs/ding-run.jpg';}
+    else{df.className='dog-frame crop-ding-main wag';}
+  }else{
+    CUR.streak=0;df.className='dog-frame crop-pipi-happy shake';document.getElementById('quiz-dog-img').src='dogs/pipi-happy.jpg';
+  }
+  setTimeout(()=>showFeedback(ok,userAns),300);
+}
+
+function showFeedback(ok,userAns){
+  const q=CUR.stage.questions[CUR.qIdx];
+  const re=document.getElementById('fb-result');
+  re.textContent=ok?'✅ 答對了！':'❌ 再想想看';re.className='fb-result '+(ok?'ok':'bad');
+  const cmp=document.getElementById('fb-compare');
+  if(!ok){cmp.style.display='block';cmp.innerHTML=`<div class="your">你選了：${userAns}</div><div class="right">✅ 正確答案：${q.answer}</div>`;}
+  else cmp.style.display='none';
+  document.getElementById('fb-explain').innerHTML=q.explain||'';
+  const errEl=document.getElementById('fb-error');
+  if(!ok&&q.err&&q.err[userAns]){errEl.style.display='block';errEl.textContent='⚠️ '+q.err[userAns];}else errEl.style.display='none';
+  const tipEl=document.getElementById('fb-tip');
+  if(q.tip){tipEl.style.display='block';tipEl.textContent=q.tip;}else tipEl.style.display='none';
+  const vw=document.getElementById('fb-vert');
+  if(q.vert){vw.style.display='block';showVert(q.vert[0],q.vert[1]);}else vw.style.display='none';
+  document.getElementById('btn-retry').style.display=ok?'none':'';
+  document.getElementById('overlay-feedback').classList.add('show');
+}
+
+function closeFeedback(){document.getElementById('overlay-feedback').classList.remove('show');}
+
+function retryQ(){
+  closeFeedback();
+  const q=CUR.stage.questions[CUR.qIdx];
+  const area=document.getElementById('answer-area');
+  if(q.type==='fill'){
+    const inp=document.getElementById('fill-in');
+    if(inp){inp.value='';inp.disabled=false;document.querySelector('.fill-submit').disabled=false;inp.focus();}
+  }else{
+    area.innerHTML=`<div class="choices-grid">${q.choices.map(c=>`<button class="choice-btn" onclick="pick(this,'${c}')">${c}</button>`).join('')}</div>`;
+  }
+}
+
+function nextQ(){
+  closeFeedback();
+  if(CUR.qIdx<CUR.stage.questions.length-1){CUR.qIdx++;renderQ();}else endStage();
+}
+
+function endStage(){
+  const n=CUR.stage.questions.length,r=CUR.score/n;
+  const stars=r===1?3:r>=.67?2:r>=.34?1:0;
+  const prev=G.stars[CUR.stage.id]||0;
+  if(stars>prev)G.stars[CUR.stage.id]=stars;
+  const ca=CUR.stage.coins||[5,10,15];
+  let coins=stars>0?ca[stars-1]:0,bonus=0;
+  if(!G.dailyDone&&G.dailyStage===CUR.stage.id&&stars===3){G.dailyDone=true;bonus=coins;coins+=bonus;toast('🎉 今日挑戰完成！雙倍骨頭幣！');}
+  G.coins+=coins;save();
+  showResult(stars,coins,bonus);
+  if(CUR.stage.id==='boss'&&stars>0)setTimeout(showBadge,1800);
+  if(stars===3)setTimeout(confetti,500);
+}
+
+function showResult(stars,coins,bonus){
+  const pool=stars===3?['太厲害了！全部答對！🎉','完美！丁丁和皮皮超開心！✨']:stars===2?['做得很好！再來一次可以更完美！','很不錯！差一點就 3 星了！⭐']:stars===1?['繼續加油！每次練習都會進步！💪','沒關係，再試一次就會更好！']:['不要放棄！皮皮陪你加油！'];
+  document.getElementById('result-title').textContent=stars===3?'🌟 完美通關！':stars>=2?'⭐ 表現很好！':'💪 繼續加油！';
+  const se=document.getElementById('result-stars');se.innerHTML='';
+  [0,1,2].forEach(i=>{const sp=document.createElement('span');sp.className='result-star'+(i<stars?' earned':'');sp.textContent=i<stars?'⭐':'☆';sp.style.animationDelay=(i*.2)+'s';se.appendChild(sp);});
+  document.getElementById('result-msg').textContent=pool[Math.floor(Math.random()*pool.length)];
+  let ct=`獲得 🦴 ${coins} 枚骨頭幣`;if(bonus>0)ct+=' （今日挑戰雙倍！）';
+  document.getElementById('result-coins').textContent=ct;
+  const pe=document.getElementById('pipi-enc');
+  if(stars<3){pe.style.display='flex';document.getElementById('pipi-enc-text').textContent=stars<=1?'再玩一次一定能拿 3 星，我陪你！✨':'差一點就 3 星了！再試一次吧！🌟';}else pe.style.display='none';
+  const cu=document.getElementById('curiosity');
+  if(CUR.stage.curiosity){cu.style.display='block';cu.textContent=CUR.stage.curiosity;}else cu.style.display='none';
+  showScreen('screen-result');
+}
+
+function retryStage(){startStage(CUR.stage.id);}
+
+function showBadge(){
+  const best=STAGES.reduce((b,s)=>(G.stars[s.id]||0)>(G.stars[b.id]||0)?s:b,STAGES[0]);
+  document.getElementById('report-card').innerHTML=`
+    <div class="report-title">📋 芙芙的成績單</div>
+    <div class="report-row"><span>總星星數</span><span>${totalStars()} / ${maxStars()} ⭐</span></div>
+    <div class="report-row"><span>骨頭幣</span><span>${G.coins} 🦴</span></div>
+    <div class="report-row"><span>地圖碎片</span><span>${mapCount()} / 6 🗺️</span></div>
+    <div class="report-row"><span>最強關卡</span><span>${best.name}</span></div>
+    <div class="report-ach">✅ 學會：小數有幾位，積就往左移幾位</div>
+    <div class="report-ach">✅ 學會：先算整數，再補小數點</div>
+    <div class="report-ach">✅ 學會：用估算檢查答案合不合理</div>`;
+  confetti();showScreen('screen-badge');
+}
+function shareResult(){toast('請截圖分享給爸爸媽媽！📸');}
+
+function showVert(a,b){
+  const aS=String(a),dec=(aS.split('.')[1]||'').length;
+  const aI=Math.round(parseFloat(aS)*Math.pow(10,dec)),bI=Math.round(parseFloat(String(b)));
+  const prod=aI*bI,ans=prod/Math.pow(10,dec);
+  const aIS=String(aI),bIS=String(bI),pS=String(prod);
+  const ml=Math.max(aIS.length,bIS.length+2,pS.length)+2;
+  const pad=(s,n)=>s.padStart(n,' ');
+  const parts=bIS.split('').reverse().map((d,i)=>({v:parseInt(d)*aI,sh:i}));
+  let h='<table class="vert-table"><tbody>';
+  h+=`<tr><td>${pad(aIS,ml)}</td></tr>`;
+  h+=`<tr><td>× ${pad(bIS,ml-2)}</td></tr>`;
+  h+=`<tr><td><div class="vert-sep"></div></td></tr>`;
+  if(parts.length>1){parts.forEach(p=>{const ps=String(p.v)+'0'.repeat(p.sh);h+=`<tr><td class="partial">${pad(ps,ml)}</td></tr>`;});h+=`<tr><td><div class="vert-sep"></div></td></tr>`;}
+  h+=`<tr><td class="ans">${pad(pS,ml)}</td></tr></tbody></table>`;
+  document.getElementById('vert-content').innerHTML=h;
+  document.getElementById('vert-note').textContent=dec>0?`${a} 有 ${dec} 位小數，計算結果往左移 ${dec} 位 → ${ans}`:'';
+}
+
+function showShop(){renderShop();showScreen('screen-shop');}
+function renderShop(){
+  document.getElementById('shop-coins-disp').textContent=G.coins;
+  const secs=[{t:'丁丁的造型',type:'ding'},{t:'皮皮的貼圖',type:'pipi'},{t:'隱藏角色',type:'secret'}];
+  document.getElementById('shop-content').innerHTML=secs.map(sec=>`
+    <div class="shop-section">
+      <div class="shop-section-title">${sec.t}</div>
+      <div class="shop-items">${SHOP_ITEMS.filter(i=>i.type===sec.type).map(renderItem).join('')}</div>
+    </div>`).join('');
+}
+function renderItem(item){
+  const owned=G.shop[item.id],allOk=!item.allStars||totalStars()>=maxStars(),afford=G.coins>=item.price;
+  let btn='';
+  if(owned)btn=`<button class="shop-buy-btn owned-btn" disabled>已擁有 ✓</button>`;
+  else if(!allOk)btn=`<button class="shop-buy-btn" disabled>需集滿所有星星</button>`;
+  else if(!afford)btn=`<button class="shop-buy-btn" disabled>還差 ${item.price-G.coins} 枚</button><div class="shop-remaining">（還差 ${item.price-G.coins} 🦴）</div>`;
+  else btn=`<button class="shop-buy-btn" onclick="buyItem('${item.id}')">${item.price===0?'解鎖！':item.price+' 🦴 購買'}</button>`;
+  return `<div class="shop-item ${owned?'owned':''} ${item.allStars&&!allOk?'dim':''}"><div class="shop-item-icon">${item.icon}</div><div class="shop-item-name">${item.name}</div><div class="shop-item-price ${afford&&!owned?'afford':''}">${item.price>0?item.price+' 🦴':'特別解鎖'}</div>${btn}</div>`;
+}
+function buyItem(id){
+  const item=SHOP_ITEMS.find(i=>i.id===id);if(!item||G.shop[id]||G.coins<item.price)return;
+  G.coins-=item.price;G.shop[id]=true;save();toast(`🎉 購買「${item.name}」成功！`);renderShop();
+}
+
+function confetti(){
+  const c=document.getElementById('confetti');c.innerHTML='';c.classList.add('active');
+  const cols=['#7c3aed','#a78bfa','#ec4899','#fbbf24','#10b981','#60a5fa'];
+  for(let i=0;i<60;i++){
+    const p=document.createElement('div');p.className='confetti-piece';
+    p.style.cssText=`left:${Math.random()*100}%;top:-20px;background:${cols[Math.floor(Math.random()*cols.length)]};width:${Math.random()*8+6}px;height:${Math.random()*8+6}px;animation-duration:${Math.random()*2+2}s;animation-delay:${Math.random()}s`;
+    c.appendChild(p);
+  }
+  setTimeout(()=>{c.classList.remove('active');c.innerHTML='';},5000);
+}
+
+function confirmBack(){if(confirm('要離開這一關嗎？（進度不會保存）'))showHome();}
+
+load();renderHome();
+</script>
+</body>
+</html>
